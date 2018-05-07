@@ -1,8 +1,9 @@
-import os
+import os,shutil
 from tkinter import *
 from PIL import Image,ImageTk
 
-path = "F:/"
+path = "D:\\QQCache\\Group\\"
+destpath = "D:\\cacheManage\\"
 
 def getSuffix(filelist):
     res = set('')
@@ -53,6 +54,10 @@ class CtrlBoard:
         self.cellHeight = 150
         self.c = Canvas(root,height=self.cellHeight*5,width=self.cellWidth*7,bg='white')
         self.c.grid(row=2,column=1,rowspan=5)
+        Label(root,text="动漫图").grid(row=2,column=0)
+        Label(root,text="表情包").grid(row=3,column=0)
+        Label(root,text="动漫表情包").grid(row=4,column=0)
+        Label(root,text="其他").grid(row=5,column=0)
         self.cells = []
         for i in range(5):
             self.cells.append([])
@@ -67,6 +72,17 @@ class CtrlBoard:
         self.c.bind("<ButtonRelease-1>",self.leftUp)
         self.downIndex=None
         self.upIndex=None
+    def MoveFile(self,dstname):
+        dirnames=["动漫图","表情包","动漫表情包","其他","discard"]
+        for i in range(5):
+            for j in range(7):
+                fname = self.cells[i][j].fname
+                if fname:
+                    p,m = os.path.split(fname)
+                    dname = dstname+dirnames[i]+'\\'+m
+                    shutil.move(fname,dname)
+                    print("move",fname,"->",dname)
+                self.cells[i][j].removePic()
     def setPic(self,filename,xi,yi):
         self.cells[xi][yi].setPic(filename)
     def removePic(self,xi,yi):
@@ -97,28 +113,34 @@ class CtrlBoard:
         print("up",self.getCellIndex(e.x,e.y))
         self.up = self.getCellIndex(e.x,e.y)
         self.reset(self.down,self.up)
+        
 class GUI:
     def __init__(self):
         self.tk = Tk()
         Label(self.tk,text="Cache Dir:").grid(row=0,column=0)
         self.cacheDir = StringVar()
+        self.cacheDir.set(path)
         Entry(self.tk,textvariable=self.cacheDir).grid(row=0,column=1)
         Label(self.tk,text="Dest Dir:").grid(row=1,column=0)
         self.destDir = StringVar()
+        self.destDir.set(destpath)
         Entry(self.tk,textvariable=self.destDir).grid(row=1,column=1)
-##        c1 = picCell(self.tk)
-##        c1.setPic("F:/胡雨奇.jpg")
-##        c1.grid(2,1)
-##        c2 = picCell(self.tk)
-##        c2.setPic("F:\_Main\程序设计\Python3\imgEditor\out.png")
-##        c2.grid(3,1)
-        cb = CtrlBoard(self.tk)
-        cb.setPic("F:\_Main\程序设计\Python3\imgEditor\out.png",1,4)
+        self.cb = CtrlBoard(self.tk)
+        self.next()
+        self.tk.bind("<Return>",self.enter)
         self.tk.mainloop()
+    def next(self):
+        filelist = os.listdir(self.getCacheDir())
+        piclist = getSuffixFile(filelist,'jpg')
+        for i in range(7):
+            self.cb.setPic(self.getCacheDir()+piclist[i],4,i)
     def getCacheDir(self):
         return self.cacheDir.get()
     def getDestDir(self):
         return self.destDir.get()
+    def enter(self,e):
+        self.cb.MoveFile(self.getDestDir())
+        self.next()
         
 ##files = os.listdir(path)
 ##g = getSuffix(files)
